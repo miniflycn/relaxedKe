@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<meta name="format-detection" content="telephone=no">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=yes">
+<link rel="stylesheet" href="./css/font-awesome.css">
+<style>
+body {
+	margin: 0px;
+	overflow: hidden;
+}
+.ppt {
+	padding: 0px;
+	margin: 0px;
+	display: none;
+}
+.has .ppt {
+	display: block;
+	transition: all 300ms;
+}
+.ppt img {
+	width: 100%;
+}
+.up,
+.down,
+.record {
+	display: none;
+}
+.has .up,
+.has .down,
+.has .record,
+.has .add {
+	margin: 0px;
+	position: absolute;
+	top: 20px;
+	right: 20px;
+	width: 30px;
+	height: 30px;
+	background: #fff;
+	display: block;
+}
+.has .record {
+	top: 100px;
+}
+.has .up {
+	top: 180px;
+}
+.has .down {
+	top: 260px;
+}
+.has .down i,
+.has .up i,
+.has .record i,
+.has .add i {
+	color: #188eee;
+	font-size: 30px;
+}
+.down,
+.up,
+.record,
+.add {
+	border: 1px solid #ddd;
+	border-radius: 20px;
+	padding: 20px;
+	overflow: hidden;
+	position: relative;
+}
+.add input[type="file"] {
+	width: 500px;
+	height: 500px;
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	opacity: 0;
+}
+.add {
+	margin: 50px auto;
+	width: 200px;
+}
+.add i {
+	font-size: 234px;
+	color: #188eee;
+}
+</style>
+<title>轻课</title>
+</head>
+<body>
+<div id="container" q-class="has: imgs | noZero" q-attr="style: height | getStyle">
+	<ul class="ppt" q-attr="style: cur | getHeight $this">
+		<li q-repeat="imgs" q-attr="style: $top.height | getStyle">
+			<img q-attr="src: id | toUrl">
+		</li>
+	</ul>
+	<div class="add"> 
+		<input type="file" accept="image/png, image/jpeg" multiple="multiple" q-on="change: upload(e)"/> 
+		<i class="fa fa-plus-circle" q-on="click: add"></i>
+	</div>
+	<div class="record">
+		<i class="fa fa-stop-circle-o" q-on="click: record"></i>
+	</div>
+	<div class="up">
+		<i class="fa fa-arrow-up" q-on="click: up"></i>
+	</div>
+	<div class="down">
+		<i class="fa fa-arrow-down" q-on="click: down"></i>
+	</div>
+</div>
+<script src="./js/q.js"></script>
+<script>
+var q = new Q({
+	el: '#container',
+	data: {
+		isShow: false,
+		cur: 0,
+		height: 0,
+		imgs: []
+	},
+	filters: {
+		toUrl: function (v) {
+			return '/files/' + v + '.jpg';
+		},
+		noZero: function (v) {
+			return !!v.length;
+		},
+		getStyle: function (height) {
+			return {
+				height: height + 'px'
+			};
+		},
+		getHeight: function (cur, q) {
+			return {
+				marginTop: -cur * q.height + 'px'
+			};
+		}
+	},
+	methods: {
+		record: function () {
+			// TODO
+		},
+		add: function () {
+			
+		},
+		upload: function (e) {
+			var self = this,
+				formData = new FormData(),
+				files = e.target.files,
+				xhr;
+			if (files.length) {
+				for (var i = 0, file; file = files[i]; i++) {
+					formData.append(file.name, file);
+				}
+			}
+			xhr = new XMLHttpRequest();
+			xhr.onload = function () {
+				var res = JSON.parse(xhr.responseText);
+				res.forEach(function (id) {
+					self.imgs.push(id);
+				});
+			}
+			xhr.open('POST', '/upload', true);
+			xhr.send(formData);
+		},
+		up: function () {
+			if (this.cur <= 0) return;
+			this.$set('cur', this.cur - 1);
+		},
+		down: function () {
+			if (this.cur >= this.imgs.length - 1) return;
+			this.$set('cur', this.cur + 1);
+		}
+	},
+	ready: function () {
+		this.$set('height', window.screen.height);
+	}
+});
+console.log(q);
+</script>
+</body>
+</html>
