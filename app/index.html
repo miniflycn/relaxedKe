@@ -10,6 +10,34 @@ body {
 	margin: 0px;
 	overflow: hidden;
 }
+.audio {
+	padding: 0px;
+	margin: 0px;
+}
+.audio ol {
+	display: inline-block;
+	border-radius: 50%;
+    width: 30px;
+	height: 30px;
+	padding: 2px;
+	margin: 5px;
+	background-color: #188eee;
+}
+.audio ol:active {
+	opacity: 0.8;
+}
+.audio ol span {
+	font-size: 18px;
+    line-height: 30px;
+    color: #fff;
+    margin-left: 3%;
+}
+.audio ol i {
+	font-size: 25px;
+    line-height: 30px;
+    color: #fff;
+    right: 2%;
+}
 .ppt {
 	padding: 0px;
 	margin: 0px;
@@ -19,16 +47,18 @@ body {
 	display: block;
 	transition: all 300ms;
 }
+.ppt li {
+	position: relative;
+}
 .ppt img {
 	width: 100%;
+	max-height: 300px;
 }
-.up,
-.down,
+.write,
 .record {
 	display: none;
 }
-.has .up,
-.has .down,
+.has .write,
 .has .record,
 .has .add {
 	margin: 0px;
@@ -43,21 +73,16 @@ body {
 .has .record {
 	top: 100px;
 }
-.has .up {
+.has .write {
 	top: 180px;
 }
-.has .down {
-	top: 260px;
-}
-.has .down i,
-.has .up i,
+.has .write i,
 .has .record i,
 .has .add i {
 	color: #188eee;
 	font-size: 30px;
 }
-.down,
-.up,
+.write,
 .record,
 .add {
 	border: 1px solid #ddd;
@@ -82,6 +107,40 @@ body {
 	font-size: 234px;
 	color: #188eee;
 }
+.chat {
+    position: absolute;
+    left: 0px;
+    bottom: 0px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 5px;
+    margin: 0px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    transition: all 300ms;
+}
+.chat ul {
+	padding: 0px;
+	margin: 0px;
+}
+.chat ul ol {
+	margin-bottom: 3px;
+	padding: 0px;
+}
+.chat .nickname {
+	color: #188eee;
+}
+.chat .chat-spread {
+	padding: 2px 23px 0px;
+    background-color: #188eee;
+    color: #fff;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    margin-left: -26px;
+    left: 50%;
+    position: absolute;
+    top: -18px;
+}
 </style>
 <title>轻课</title>
 </head>
@@ -90,31 +149,104 @@ body {
 	<ul class="ppt" q-attr="style: cur | getHeight $this">
 		<li q-repeat="imgs" q-attr="style: $top.height | getStyle">
 			<img q-attr="src: id | toUrl">
+			<ul class="audio">
+				<ol q-repeat="records"><i class="fa fa-volume-up"></i></ol>
+			</ul>
+			<div class="chat" q-attr="style: read | chatHeight">
+				<i class="fa fa-sort-asc chat-spread" q-on="click: spread(this)"></i>
+				<ul class="chat-list">
+					<ol q-repeat="chat"><span class="nickname" q-text="nickname"></span>: <span class="content" q-text="content"></span></ol>
+				</ul>
+			</div>
 		</li>
 	</ul>
 	<div class="add"> 
 		<input type="file" accept="image/png, image/jpeg" multiple="multiple" q-on="change: upload(e)"/> 
-		<i class="fa fa-plus-circle" q-on="click: add"></i>
+		<i class="fa fa-file-photo-o" q-on="click: add"></i>
 	</div>
 	<div class="record">
-		<i class="fa fa-stop-circle-o" q-on="click: record"></i>
+		<i class="fa fa-microphone" q-on="click: record"></i>
 	</div>
-	<div class="up">
-		<i class="fa fa-arrow-up" q-on="click: up"></i>
-	</div>
-	<div class="down">
-		<i class="fa fa-arrow-down" q-on="click: down"></i>
+	<div class="write">
+		<i class="fa fa-pencil" q-on="click: write"></i>
 	</div>
 </div>
 <script src="./js/q.js"></script>
 <script>
+var height;
+var bindTouch = function () {
+	var ele = document.documentElement,
+		startTouch,
+		endTouch,
+		start;
+
+	function formatTouch(touch) {
+		return {
+			x: touch.clientX,
+			y: touch.clientY
+		};
+	}
+
+	function distance(A, B) {
+		var a = B.x - A.x,
+			b = B.y - A.y;
+		return Math.sqrt(a * a + b * b);
+	}
+
+	return function () {
+		var self = this;
+		ele.addEventListener('touchstart', function (e) {
+			if (e.touches.length !== 1) return;
+			start = +new Date();
+			startTouch = formatTouch(e.touches[0]);
+		}, false);
+		ele.addEventListener('touchmove', function (e) {
+			if (e.touches.length !== 1) return;
+			endTouch = formatTouch(e.touches[0]);
+		});
+		ele.addEventListener('touchend', function (e) {
+			if (!endTouch) return;
+			if (
+				+new Date() - start < 500 &&
+				distance(startTouch, endTouch) > 50
+			) {	
+				startTouch.y > endTouch.y ?
+					self.down() :
+					self.up();
+			}
+			endTouch = startTouch = null;
+		}, false);
+	}
+}();
+
+function add(imgs) {
+	var self = this;
+	imgs.forEach(function (id) {
+		// mock
+		id.chat = [{
+			nickname: '作者？',
+			content: '基于类似弹幕的播放时间轴聊天系统'
+		}, {
+			nickname: 'test',
+			content: '测试测试'
+		}, {
+			nickname: '教育教育',
+			content: '神马？'
+		}];
+		id.read = false;
+		id.records = id.records || [{}, {}];
+		self.imgs.push(id);
+	});
+}
+
 var q = new Q({
 	el: '#container',
 	data: {
 		isShow: false,
 		cur: 0,
 		height: 0,
-		imgs: []
+		imgs: [],
+		chat: []
 	},
 	filters: {
 		toUrl: function (v) {
@@ -132,8 +264,19 @@ var q = new Q({
 			return {
 				marginTop: -cur * q.height + 'px'
 			};
+		},
+		getKey: function (v) {
+			return v.$key() + 1;
+		},
+		chatHeight: function (v, self) {
+			return v ? 
+				{
+					height: height - 330 + 'px'
+				} : {
+					height: '50px'
+				};
 		}
-	},
+ 	},
 	methods: {
 		record: function () {
 			// TODO
@@ -154,9 +297,7 @@ var q = new Q({
 			xhr = new XMLHttpRequest();
 			xhr.onload = function () {
 				var res = JSON.parse(xhr.responseText);
-				res.forEach(function (id) {
-					self.imgs.push(id);
-				});
+				add.call(self, res);
 			}
 			xhr.open('POST', '/upload', true);
 			xhr.send(formData);
@@ -168,13 +309,31 @@ var q = new Q({
 		down: function () {
 			if (this.cur >= this.imgs.length - 1) return;
 			this.$set('cur', this.cur + 1);
+		},
+		spread: function (obj) {
+			obj.$set('read', !obj.read);
+		},
+		write: function () {
+			// TODO
 		}
 	},
 	ready: function () {
-		this.$set('height', window.screen.height);
+		// set client height
+		height = window.screen.height;
+		this.$set('height', height);
+		// bind touch
+		bindTouch.call(this);
+		// init data
+		var self = this,
+			xhr = new XMLHttpRequest();
+		xhr.onload = function () {
+			var res = JSON.parse(xhr.responseText);
+			res.imgs && add.call(self, res.imgs);
+		}
+		xhr.open('GET', '/init', true);
+		xhr.send();
 	}
 });
-console.log(q);
 </script>
 </body>
 </html>
