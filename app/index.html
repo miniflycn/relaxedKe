@@ -267,6 +267,7 @@ var bindTouch = function () {
 		ele.addEventListener('touchmove', function (e) {
 			if (e.touches.length !== 1) return;
 			endTouch = formatTouch(e.touches[0]);
+			e.preventDefault();
 		});
 		ele.addEventListener('touchend', function (e) {
 			if (!endTouch) return;
@@ -485,7 +486,7 @@ var q = new Q({
 	},
 	ready: function () {
 		// set client height
-		height = document.documentElement.clientHeight;
+		height = window.innerHeight;
 		this.$set('height', height);
 		// bind touch
 		bindTouch.call(this);

@@ -10,7 +10,7 @@ var connect = require('connect'),
     // hard code
     roomid = 123;
 
-fs.mkdirSync('./files');
+!fs.existsSync('./files') && fs.mkdirSync('./files');
 
 app
 .use('/record', body.json())
