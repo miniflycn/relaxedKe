@@ -1,6 +1,7 @@
 var connect = require('connect'),
     middlePipe = require('middleware-pipe'),
     multipart = require('connect-multiparty'),
+    body = require('body-parser'),
     uid = require('uid2'),
     util = require('util'),
     fs = require('fs'),
@@ -10,6 +11,12 @@ var connect = require('connect'),
     roomid = 123;
 
 app
+.use('/record', body.json())
+.use('/record', function (req, res) {
+    var data = req.body;
+    db.get(roomid).record(data.id, data.pos);
+    res.end('');
+})
 // TODO: There have a bug about communication.
 .use('/sub', function (req, res) {
     db.subscribe(roomid, function (data) {
@@ -25,7 +32,7 @@ app
 .use('/upload', function (req, res) {
     var files = req.files, ids = [];
     Object.keys(req.files).forEach(function (key) {
-        var file = files[key].jpg,
+        var file = files[key].jpg || files[key].jpeg,
             id = uid(10);
         fs.renameSync(file.path, './files/' + id + '.jpg');
         ids.push({ id: id });
