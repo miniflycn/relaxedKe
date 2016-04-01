@@ -36,7 +36,8 @@ app
     Object.keys(req.files).forEach(function (key) {
         var file = files[key].jpg || files[key].jpeg,
             id = uid(10);
-        fs.renameSync(file.path, './files/' + id + '.jpg');
+        // fs.renameSync(file.path, './files/' + id + '.jpg');
+        fs.writeFileSync('./files/' + id + '.jpg', fs.readFileSync(file.path));
         ids.push({ id: id });
         // get Room & add a image
         db.get(roomid).add(id);
