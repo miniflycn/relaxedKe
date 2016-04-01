@@ -160,6 +160,38 @@ body {
     position: absolute;
     top: -18px;
 }
+.message {
+	display: none;
+	position: fixed;
+	box-sizing: border-box;
+	width: 100%;
+	height: 30px;
+	padding 0px 10px;
+	bottom: 0;
+	background-color: #96daff;
+}
+.has .message {
+	display: block;
+}
+.message input {
+	width: 75%;
+	height: 25px;
+	border: 0;
+	border-radius: 5px;
+	margin: 2px;
+}
+.message button {
+	background-color: #188eee;
+	width: 15%;
+	height: 25px;
+	margin: 2px;
+	border: 0px;
+	border-radius: 5px;
+	color: #fff;
+}
+.message button:active {
+	opacity: 0.8;
+}
 </style>
 <title>轻课</title>
 </head>
@@ -190,6 +222,10 @@ body {
 		<div class="write">
 			<i class="fa fa-pencil" q-on="click: write"></i>
 		</div>
+		<div class="message">
+			<input q-model="msg" type="text" />
+			<button q-on="click: say">提交</button>
+		</div>
 	</div>
 </div>
 <script src="./js/q.js"></script>
@@ -197,6 +233,8 @@ body {
 <script src="./js/fix.js"></script>
 <script>
 bouncefix.add('wrapper');
+var myName = ['佐助', '鸣人', '大侠', '老师'];
+myName = myName[Math.random() * myName.length | 0];
 var height;
 var recordMan = function () {
 	var cache = localStorage['relaxedKe'];
@@ -336,6 +374,14 @@ var longPull = function () {
 	};
 }();
 
+var post = function (url, data, cb) {
+	var xhr = new XMLHttpRequest();
+	xhr.onload = cb || function () {};
+	xhr.open('POST', url, true)
+	xhr.setRequestHeader('Content-Type', 'application/json');
+	xhr.send(JSON.stringify(data));
+};
+
 var bindWeixin = function () {
 	window.weixin = function (param) {
 		param.jsApiList = [
@@ -429,13 +475,15 @@ var q = new Q({
 							    localId: localId,
 							    isShowProgressTips: 1,
 							    success: function (res) {
-							    	var xhr = new XMLHttpRequest();
-							    	xhr.onload = function () {};
-							    	xhr.open('POST', '/record', true);
-							    	xhr.setRequestHeader('Content-Type', 'application/json');
-							    	// lock
-							    	self.$set('lock', true);
-							    	xhr.send(JSON.stringify({ pos: self.cur, id: res.serverId }));
+									self.$set('lock', true);
+							    	post('/record', { pos: self.cur, id: res.serverId });
+							    	// var xhr = new XMLHttpRequest();
+							    	// xhr.onload = function () {};
+							    	// xhr.open('POST', '/record', true);
+							    	// xhr.setRequestHeader('Content-Type', 'application/json');
+							    	// // lock
+							    	// self.$set('lock', true);
+							    	// xhr.send(JSON.stringify({ pos: self.cur, id: res.serverId }));
 							    	recordMan.save(res.serverId, localId);
 							    	self.imgs[self.cur].records.push({ id: res.serverId });
 							    }
@@ -482,6 +530,12 @@ var q = new Q({
 		},
 		write: function () {
 			// TODO
+		},
+		say: function () {
+			this.imgs[this.cur].chat.push({ nickname: '我', content: this.msg });
+			// lock long pull
+			this.$set('lock', true);
+			post('/say', { pos: this.cur, nickname: myName, content: this.msg });
 		}
 	},
 	ready: function () {

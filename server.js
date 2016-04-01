@@ -13,6 +13,12 @@ var connect = require('connect'),
 !fs.existsSync('./files') && fs.mkdirSync('./files');
 
 app
+.use('/say', body.json())
+.use('/say', function (req, res) {
+    var data = req.body;
+    db.get(roomid).say(data.pos, data.nickname, data.content);
+    res.end('');
+})
 .use('/record', body.json())
 .use('/record', function (req, res) {
     var data = req.body;
