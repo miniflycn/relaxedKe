@@ -536,6 +536,7 @@ var q = new Q({
 			// lock long pull
 			this.$set('lock', true);
 			post('/say', { pos: this.cur, nickname: myName, content: this.msg });
+			this.$set('msg', '');
 		}
 	},
 	ready: function () {
